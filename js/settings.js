@@ -30,6 +30,7 @@ $('clientId').value = settings.clientId;
 $('maxPerChannel').value = settings.maxPerChannel;
 $('includeLive').checked = settings.includeLive;
 $('finishThreshold').value = settings.finishThreshold;
+$('finishRemaining').value = settings.finishRemaining;
 $('originHint').textContent = location.origin;
 
 $('showKey').addEventListener('change', (e) => { $('apiKey').type = e.target.checked ? 'text' : 'password'; });
@@ -111,7 +112,7 @@ $('oauthBtn').addEventListener('click', () => guard('importMsg', async () => {
 
 // ---- 3. Channels & sync ----
 
-for (const id of ['maxPerChannel', 'includeLive', 'finishThreshold']) {
+for (const id of ['maxPerChannel', 'includeLive', 'finishThreshold', 'finishRemaining']) {
   $(id).addEventListener('change', (e) => {
     store.saveSettings({ [id]: e.target.type === 'checkbox' ? e.target.checked : Number(e.target.value) });
   });

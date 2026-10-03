@@ -93,6 +93,7 @@ const DEFAULT_SETTINGS = {
   maxPerChannel: 200,
   includeLive: false,
   finishThreshold: 90,
+  finishRemaining: 3,
   lastSync: 0,
 };
 

@@ -9,7 +9,8 @@ filtering that YouTube itself doesn't give you:
 - **Sort** by newest, oldest, longest, shortest, most viewed, title, channel, recently
   watched, most progress, or least time remaining.
 - **Progress tracking:** videos played in the app's built-in player remember where you stopped
-  and resume from there. A video counts as *finished* at 90% (you can change this).
+  and resume from there. A video you've started counts as *finished* once you've watched 90% of it
+  or there are less than 3 minutes left (both adjustable in Settings).
 
 Everything runs in your browser. Channels, videos and progress are stored locally in IndexedDB, and
 nothing is sent anywhere except the YouTube API.

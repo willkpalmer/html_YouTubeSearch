@@ -1,4 +1,7 @@
 // Shared formatting helpers.
+import { getSettings } from './store.js';
+
+const settings = getSettings();
 
 export function formatDuration(sec) {
   sec = Math.max(0, Math.round(sec || 0));
@@ -48,13 +51,25 @@ export function youtubeUrl(id, position = 0) {
   return `https://www.youtube.com/watch?v=${id}${position > 5 ? `&t=${Math.floor(position)}s` : ''}`;
 }
 
-export function statusOf(progress) {
-  return progress?.status || 'unwatched';
+// A started video counts as finished once you've watched enough of it
+// (finishThreshold %) or there's only a little left (finishRemaining minutes).
+export function isFinished(position, duration) {
+  if (!duration || !(position > 0)) return false;
+  const threshold = (Number(settings.finishThreshold) || 90) / 100;
+  const mins = Number(settings.finishRemaining);
+  const remaining = (Number.isFinite(mins) ? mins : 3) * 60;
+  return position / duration >= threshold || duration - position < remaining;
+}
+
+export function statusOf(progress, video) {
+  const status = progress?.status || 'unwatched';
+  if (status === 'started' && isFinished(progress.position, progress.duration || video?.duration)) return 'finished';
+  return status;
 }
 
 export function percentOf(progress, video) {
   if (!progress) return 0;
-  if (progress.status === 'finished') return 100;
+  if (statusOf(progress, video) === 'finished') return 100;
   const dur = progress.duration || video?.duration || 0;
   return dur ? Math.min(100, Math.round((progress.position / dur) * 100)) : 0;
 }

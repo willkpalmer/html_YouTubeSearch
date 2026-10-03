@@ -67,7 +67,7 @@ function applyFilters() {
     if (f.channel && v.channelId !== f.channel) return false;
     if (f.hideShorts && v.isShort) return false;
     if (!f.showLive && v.kind === 'live') return false;
-    if (!statuses.has(statusOf(progress.get(v.id)))) return false;
+    if (!statuses.has(statusOf(progress.get(v.id), v))) return false;
     if (minSec !== null && v.duration < minSec) return false;
     if (maxSec !== null && v.duration > maxSec) return false;
     if (newest !== null && v.publishedAt < newest) return false;
@@ -126,7 +126,7 @@ function renderMore() {
 
 function card(v) {
   const prog = progress.get(v.id);
-  const status = statusOf(prog);
+  const status = statusOf(prog, v);
   const pct = percentOf(prog, v);
   const watchHref = `watch.html?v=${v.id}`;
 

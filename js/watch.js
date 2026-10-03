@@ -1,10 +1,9 @@
 // Plays a video with the YouTube IFrame player and records how far you got.
 import * as store from './store.js';
-import { formatAge, formatCount, formatDuration, youtubeUrl } from './common.js';
+import { formatAge, formatCount, formatDuration, youtubeUrl, isFinished, statusOf } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const videoId = new URLSearchParams(location.search).get('v');
-const threshold = (Number(store.getSettings().finishThreshold) || 90) / 100;
 
 let player;
 let video;
@@ -12,8 +11,9 @@ let rec;
 let timer;
 
 function describe() {
-  if (!rec || rec.status === 'unwatched') return 'Not watched yet';
-  if (rec.status === 'finished') return '✓ Finished';
+  const status = statusOf(rec, video);
+  if (status === 'unwatched') return 'Not watched yet';
+  if (status === 'finished') return '✓ Finished';
   const dur = rec.duration || video?.duration || 0;
   return `Watched ${formatDuration(rec.position)}${dur ? ` of ${formatDuration(dur)}` : ''}`;
 }
@@ -28,7 +28,7 @@ async function save(final = false) {
   const position = player.getCurrentTime();
   const duration = player.getDuration() || video?.duration || 0;
   if (position < 1 && !final) return;
-  const finished = rec?.status === 'finished' || (duration && position / duration >= threshold);
+  const finished = rec?.status === 'finished' || isFinished(position, duration);
   rec = await store.setStatus(videoId, finished ? 'finished' : 'started', { position, duration });
   refreshUi();
 }
