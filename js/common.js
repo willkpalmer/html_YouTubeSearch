@@ -52,13 +52,17 @@ export function youtubeUrl(id, position = 0) {
 }
 
 // A started video counts as finished once you've watched enough of it
-// (finishThreshold %) or there's only a little left (finishRemaining minutes).
+// (finishThreshold %) or, for videos over 10 minutes, there's only a little
+// left (finishRemaining minutes).
+const MIN_LENGTH_FOR_REMAINING_RULE = 10 * 60;
+
 export function isFinished(position, duration) {
   if (!duration || !(position > 0)) return false;
   const threshold = (Number(settings.finishThreshold) || 90) / 100;
   const mins = Number(settings.finishRemaining);
   const remaining = (Number.isFinite(mins) ? mins : 3) * 60;
-  return position / duration >= threshold || duration - position < remaining;
+  return position / duration >= threshold
+    || (duration > MIN_LENGTH_FOR_REMAINING_RULE && duration - position < remaining);
 }
 
 export function statusOf(progress, video) {
