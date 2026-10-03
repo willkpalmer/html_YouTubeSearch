@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subscription Search</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo"></span>Subscription Search</a>
+    <nav>
+      <a href="index.html" class="active">Browse</a>
+      <a href="settings.html">Settings &amp; channels</a>
+    </nav>
+    <span class="spacer"></span>
+    <span class="sync-status" id="syncStatus"></span>
+    <button class="btn primary" id="syncBtn">Sync new videos</button>
+  </header>
+
+  <main class="layout">
+    <aside class="filters" id="filters">
+      <div>
+        <h3>Search</h3>
+        <input type="search" id="q" placeholder="Title, channel or description">
+      </div>
+
+      <div>
+        <h3>Channel</h3>
+        <select id="channel"><option value="">All channels</option></select>
+      </div>
+
+      <div>
+        <h3>Watch status</h3>
+        <div class="chips" id="status">
+          <label class="chip"><input type="checkbox" value="unwatched" checked><span class="dot unwatched"></span>Unwatched</label>
+          <label class="chip"><input type="checkbox" value="started" checked><span class="dot started"></span>Started</label>
+          <label class="chip"><input type="checkbox" value="finished"><span class="dot finished"></span>Finished</label>
+        </div>
+      </div>
+
+      <div>
+        <h3>Length (minutes)</h3>
+        <div class="row">
+          <input type="number" id="minLen" min="0" placeholder="Min">
+          <span>to</span>
+          <input type="number" id="maxLen" min="0" placeholder="Max">
+        </div>
+        <div class="chips" style="margin-top:8px" id="lenPresets">
+          <button class="chip" data-min="" data-max="10">&lt; 10m</button>
+          <button class="chip" data-min="10" data-max="30">10–30m</button>
+          <button class="chip" data-min="30" data-max="60">30–60m</button>
+          <button class="chip" data-min="60" data-max="">1h+</button>
+        </div>
+      </div>
+
+      <div>
+        <h3>Uploaded</h3>
+        <div class="row">
+          <select id="newerThan" title="Uploaded within">
+            <option value="">Any time</option>
+            <option value="1">Last 24 hours</option>
+            <option value="7">Last week</option>
+            <option value="30">Last month</option>
+            <option value="90">Last 3 months</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <select id="olderThan" title="Uploaded before">
+            <option value="">…and no older limit</option>
+            <option value="7">Older than a week</option>
+            <option value="30">Older than a month</option>
+            <option value="90">Older than 3 months</option>
+            <option value="365">Older than a year</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <h3>Type</h3>
+        <label class="check"><input type="checkbox" id="hideShorts" checked> Hide Shorts</label>
+        <label class="check"><input type="checkbox" id="showLive" checked> Include past live streams</label>
+      </div>
+
+      <button class="btn" id="reset">Reset filters</button>
+    </aside>
+
+    <section>
+      <div class="results-head">
+        <strong class="count" id="count"></strong>
+        <span class="spacer" style="flex:1"></span>
+        <label>Sort by
+          <select id="sort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="longest">Longest first</option>
+            <option value="shortest">Shortest first</option>
+            <option value="views">Most viewed</option>
+            <option value="title">Title (A–Z)</option>
+            <option value="channel">Channel (A–Z)</option>
+            <option value="recent">Recently watched</option>
+            <option value="progress">Most progress</option>
+            <option value="remaining">Least time remaining</option>
+          </select>
+        </label>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="more"><button class="btn" id="more" hidden>Show more</button></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/browse.js"></script>
+</body>
+</html>

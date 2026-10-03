@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings – Subscription Search</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo"></span>Subscription Search</a>
+    <nav>
+      <a href="index.html">Browse</a>
+      <a href="settings.html" class="active">Settings &amp; channels</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="panel">
+      <h2>1. YouTube API key</h2>
+      <p>The app reads channel uploads through the free YouTube Data API. The key is kept only in this browser.</p>
+      <details>
+        <summary>How to get a key (about 5 minutes)</summary>
+        <ol>
+          <li>Open <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Google Cloud Console</a> and create a project (any name).</li>
+          <li>Enable the <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">YouTube Data API v3</a> for that project.</li>
+          <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Credentials</a> → <strong>Create credentials</strong> → <strong>API key</strong>.</li>
+          <li>Recommended: edit the key → <strong>API restrictions</strong> → restrict it to <strong>YouTube Data API v3</strong>.</li>
+          <li>Paste it below. The free quota (10,000 units a day) is plenty: a sync costs about 2–3 units per channel.</li>
+        </ol>
+      </details>
+      <div class="field">
+        <label for="apiKey"><strong>API key</strong></label>
+        <input type="password" id="apiKey" placeholder="AIza…" autocomplete="off">
+      </div>
+      <div class="row">
+        <button class="btn primary" id="saveKey">Save &amp; test key</button>
+        <label class="check"><input type="checkbox" id="showKey"> Show</label>
+      </div>
+      <div class="msg" id="keyMsg"></div>
+    </section>
+
+    <section class="panel">
+      <h2>2. Import your subscriptions</h2>
+      <p>Pick whichever is easiest. You can use more than one; duplicates are ignored.</p>
+
+      <h3>Option A – Google Takeout file (no extra setup)</h3>
+      <p>Go to <a href="https://takeout.google.com/" target="_blank" rel="noopener">takeout.google.com</a>, click <strong>Deselect all</strong>, tick <strong>YouTube and YouTube Music</strong>, under “All YouTube data included” choose only <strong>subscriptions</strong> (and <strong>history</strong> if you want step 4). Export, unzip, then choose <code>subscriptions/subscriptions.csv</code>:</p>
+      <input type="file" id="csvFile" accept=".csv,text/csv">
+
+      <h3>Option B – Paste channels</h3>
+      <p>One per line: channel URLs, <code>@handles</code> or channel IDs (<code>UC…</code>).</p>
+      <textarea id="paste" rows="4" placeholder="https://www.youtube.com/@veritasium&#10;@3blue1brown&#10;UCsXVk37bltHxD1rDPwtNM8Q"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="pasteBtn">Add channels</button></div>
+
+      <h3>Option C – Sign in with Google</h3>
+      <p>Needs an OAuth client ID from the same Cloud project: <strong>Credentials → Create credentials → OAuth client ID → Web application</strong>, with <code id="originHint"></code> as an <strong>Authorized JavaScript origin</strong>. Set up the <strong>OAuth consent screen</strong> as “External” and add yourself as a test user.</p>
+      <div class="field">
+        <input type="text" id="clientId" placeholder="1234567890-abc….apps.googleusercontent.com">
+      </div>
+      <button class="btn" id="oauthBtn">Sign in &amp; import subscriptions</button>
+
+      <h3>Option D – Public subscriptions</h3>
+      <p>If your subscriptions are set to public, enter your own channel ID (or @handle):</p>
+      <div class="row">
+        <input type="text" id="myChannel" placeholder="UC… or @yourhandle" style="flex:1">
+        <button class="btn" id="publicBtn">Import</button>
+      </div>
+
+      <div class="msg" id="importMsg"></div>
+    </section>
+
+    <section class="panel">
+      <h2>3. Channels &amp; syncing</h2>
+      <div class="row" style="flex-wrap:wrap; gap:16px; margin:10px 0">
+        <label>Videos per channel on first sync <input type="number" id="maxPerChannel" min="10" max="5000" step="10" style="width:90px"></label>
+        <label class="check"><input type="checkbox" id="includeLive"> Also fetch past live streams</label>
+        <label>Count as finished at <input type="number" id="finishThreshold" min="50" max="100" style="width:70px">%</label>
+      </div>
+      <p>Shorts are excluded automatically. Later syncs only fetch videos uploaded since the last one.</p>
+      <div class="row" style="margin:12px 0">
+        <button class="btn primary" id="syncAllBtn">Sync all channels now</button>
+        <button class="btn" id="refetchBtn" title="Delete stored videos (keeps watch progress) and download again">Re-download all videos</button>
+      </div>
+      <div class="msg" id="syncMsg"></div>
+      <table>
+        <thead><tr><th></th><th>Channel</th><th>Videos</th><th>Last synced</th><th>Include</th><th></th></tr></thead>
+        <tbody id="channelRows"></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>4. Import watch history (optional)</h2>
+      <p>YouTube doesn't let other apps read your watch history or progress, so this app tracks progress when you play videos in its own player. To bring in what you've already watched on YouTube, import <code>history/watch-history.html</code> or <code>.json</code> from Google Takeout. Only videos currently marked unwatched are changed.</p>
+      <div class="row">
+        <label>Mark them as
+          <select id="historyStatus">
+            <option value="finished">Finished</option>
+            <option value="started">Started</option>
+          </select>
+        </label>
+        <input type="file" id="historyFile" accept=".json,.html,application/json,text/html">
+      </div>
+      <div class="msg" id="historyMsg"></div>
+    </section>
+
+    <section class="panel">
+      <h2>5. Backup</h2>
+      <p>Your channels and watch progress live in this browser only. Export a backup to move them to another browser or PC.</p>
+      <div class="row" style="flex-wrap:wrap">
+        <button class="btn" id="exportBtn">Export backup</button>
+        <label class="btn">Import backup <input type="file" id="importFile" accept=".json" hidden></label>
+        <span style="flex:1"></span>
+        <button class="btn" id="wipeBtn">Delete all data</button>
+      </div>
+      <div class="msg" id="backupMsg"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/settings.js"></script>
+</body>
+</html>
