@@ -41,7 +41,10 @@ export function grabProgress(appUrl) {
     if (id && typeof o.percentDurationWatched === 'number') add(id, o.percentDurationWatched, null);
     for (const k in o) {
       const v = o[k];
-      if (id && /progressbar/i.test(k) && v && typeof v.startPercent === 'number') add(id, v.startPercent, null);
+      // Watched-progress bars only: YouTube also uses startPercent for "segment"
+      // bars that highlight part of a video, which aren't watch progress.
+      if (id && /progressbar/i.test(k) && v && typeof v.startPercent === 'number'
+        && v.segmentDurationPercent == null && !/SEGMENT/.test(v.style || '')) add(id, v.startPercent, null);
       walk(v, id, depth + 1);
     }
   }

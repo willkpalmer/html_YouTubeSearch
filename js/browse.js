@@ -146,8 +146,10 @@ function card(v) {
     el('a', { class: 'thumb', href: watchHref },
       el('img', { src: v.thumb, alt: '', loading: 'lazy' }),
       statusBadge,
-      el('span', { class: 'badge' }, v.kind === 'live' ? `LIVE · ${formatDuration(v.duration)}` : formatDuration(v.duration)),
-      pct > 0 ? el('div', { class: 'bar', title: `${pct}% watched` }, el('div', { style: `width:${pct}%` })) : null),
+      // Laid out like YouTube: progress bar on the left, duration badge on the right.
+      el('div', { class: 'thumb-bottom' },
+        pct > 0 ? el('div', { class: 'bar', title: `${pct}% watched` }, el('div', { style: `width:${pct}%` })) : null,
+        el('span', { class: 'badge' }, v.kind === 'live' ? `LIVE \u00b7 ${formatDuration(v.duration)}` : formatDuration(v.duration)))),
     el('div', { class: 'body' },
       el('a', { class: 'title', href: watchHref, title: v.title }, v.title),
       el('div', { class: 'meta' },
