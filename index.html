@@ -11,7 +11,8 @@
     <a class="brand" href="index.html"><span class="logo"></span>Subscription Search</a>
     <nav>
       <a href="index.html" class="active">Browse</a>
-      <a href="settings.html">Settings &amp; channels</a>
+      <a href="channels.html">Channels</a>
+      <a href="settings.html">Settings</a>
     </nav>
     <span class="spacer"></span>
     <span class="sync-status" id="syncStatus"></span>
@@ -25,7 +26,7 @@
         <input type="search" id="q" placeholder="Title, channel or description">
       </div>
 
-      <div>
+      <div id="channelFilter">
         <h3>Channel</h3>
         <select id="channel"><option value="">All channels</option></select>
       </div>
@@ -87,6 +88,7 @@
     </aside>
 
     <section>
+      <div class="channel-banner" id="channelBanner" hidden></div>
       <div class="results-head">
         <strong class="count" id="count"></strong>
         <span class="spacer" style="flex:1"></span>

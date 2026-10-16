@@ -8,6 +8,8 @@ filtering that YouTube itself doesn't give you:
 - **Filter** by channel, watch status (unwatched / started / finished), length and upload date.
 - **Sort** by newest, oldest, longest, shortest, most viewed, title, channel, recently
   watched, most progress, or least time remaining.
+- **Channels page:** an alphabetical, searchable list of your subscriptions. Pick one to sync just
+  that channel and browse its videos with the same filters and sorting.
 - **Progress tracking:** videos played in the app's built-in player remember where you stopped
   and resume from there. A video you've started counts as *finished* once you've watched 90% of it
   or, for videos longer than 10 minutes, there are less than 3 minutes left (both adjustable in Settings).
@@ -45,13 +47,19 @@ the repo. If you restrict the key by HTTP referrer, add that URL to the allowed 
 
 ## About watch status
 
-YouTube doesn't let third-party apps read your watch history or how far you got in a video. So:
+YouTube's API doesn't let third-party apps read your watch history or resume positions. The app gets
+them in these ways:
 
-- **Playing in this app** (click a thumbnail) records progress automatically.
+- **Grab YouTube progress bookmark (recommended).** Settings step 4 has a button to drag to your
+  bookmarks bar. Open youtube.com while signed in, ideally your
+  [History](https://www.youtube.com/feed/history) page or a channel's **Videos** tab, and click the bookmark.
+  It scrolls the page, reads the red resume bar on each thumbnail, and sends the results back to the app.
+  Progress is only ever moved forward. It depends on YouTube's page layout, so if a YouTube redesign
+  breaks it, let me know.
+- **Playing in this app** (click a thumbnail) records progress automatically and resumes where you stopped.
 - **Mark finished / Mark unwatched** buttons on each video set it manually.
-- **Import watch history:** Settings step 4 reads `watch-history.html` / `.json` from Google
-  Takeout and marks those videos finished (or started).
-- **Open on YouTube ↗** opens a video on youtube.com. Progress there isn't tracked.
+- **Google Takeout watch history** (Settings step 4) marks the videos you've watched, but has no positions.
+- **Open on YouTube ↗** opens a video on youtube.com. Use the bookmark afterwards to bring that progress back.
 
 Use **Settings → Backup** to export or import your channels and progress, e.g. to move to another PC.
 
@@ -59,11 +67,13 @@ Use **Settings → Backup** to export or import your channels and progress, e.g.
 
 | File | Purpose |
 | --- | --- |
-| `index.html`, `js/browse.js` | Browse / search / filter / sort |
+| `index.html`, `js/browse.js` | Browse / search / filter / sort (`?channel=` for one channel) |
+| `channels.html`, `js/channels.js` | Alphabetical list of subscriptions |
 | `watch.html`, `js/watch.js` | Embedded player (YouTube IFrame API) that saves progress every 5s |
 | `settings.html`, `js/settings.js` | API key, subscription import, sync, history import, backup |
 | `js/youtube.js` | YouTube Data API calls and the sync logic |
 | `js/store.js` | IndexedDB storage and settings |
+| `js/grabber.js` | The "Grab YouTube progress" bookmarklet |
 | `start.bat`, `serve.ps1`, `start.sh` | Local web server launchers |
 
 Shorts are excluded by reading each channel's long-form-only uploads playlist (`UULF…`) instead of

@@ -1,6 +1,7 @@
 import * as store from './store.js';
 import * as yt from './youtube.js';
-import { el, formatAge } from './common.js';
+import { el, formatAge, isFinished, statusOf, percentOf } from './common.js';
+import { bookmarkletHref, parsePayload } from './grabber.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -176,7 +177,74 @@ $('refetchBtn').addEventListener('click', async () => {
   await syncAll();
 });
 
-// ---- 4. Watch history ----
+// ---- 4. Watch progress from YouTube ----
+
+$('bookmarklet').href = bookmarkletHref(new URL('settings.html', location.href).href);
+$('bookmarklet').addEventListener('click', (e) => {
+  e.preventDefault();
+  alert('Drag this button to your bookmarks bar, then click it while you\u2019re on youtube.com.');
+});
+
+// Merge progress read from youtube.com. Only ever moves progress forward.
+async function applyYoutubeProgress(items, fromHistory) {
+  const [videoList, progress] = await Promise.all([store.getAll('videos'), store.getProgressMap()]);
+  const videos = new Map(videoList.map((v) => [v.id, v]));
+  const now = Date.now();
+  const counts = { started: 0, finished: 0, unchanged: 0, unknown: 0 };
+  const updates = [];
+  items.forEach(({ id, percent, seconds }, i) => {
+    const video = videos.get(id);
+    const old = progress.get(id);
+    const duration = video?.duration || old?.duration || 0;
+    const position = seconds ?? (percent != null && duration ? (percent / 100) * duration : 0);
+    const newPct = duration ? (position / duration) * 100 : percent ?? 0;
+    const oldStatus = statusOf(old, video);
+    if (oldStatus === 'finished' || (oldStatus === 'started' && newPct <= percentOf(old, video))) {
+      counts.unchanged++;
+      return;
+    }
+    const status = (percent != null && percent >= 99) || isFinished(position, duration) ? 'finished' : 'started';
+    counts[status]++;
+    if (!video) counts.unknown++;
+    updates.push({
+      ...(old || {}),
+      id,
+      status,
+      position,
+      ytPercent: percent ?? undefined,
+      duration: duration || undefined,
+      // The History page lists most recently watched first.
+      updatedAt: fromHistory ? now - i * 1000 : old?.updatedAt || 0,
+    });
+  });
+  await store.putMany('progress', updates);
+  const total = items.length;
+  msg('progressMsg',
+    `Read progress for ${total} video${total === 1 ? '' : 's'} from YouTube: ${counts.started} now started, `
+    + `${counts.finished} now finished, ${counts.unchanged} already up to date.`
+    + (counts.unknown ? `\n${counts.unknown} of them aren't from your synced channels yet; they'll show up after a sync.` : ''),
+    'ok');
+}
+
+async function importPayload(text) {
+  const items = parsePayload(text); // validates first, with a friendly error
+  await applyYoutubeProgress(items, /\/feed\/history/.test(JSON.parse(text).from || ''));
+}
+
+$('progressPasteBtn').addEventListener('click', () => guard('progressMsg', async () => {
+  await importPayload($('progressPaste').value.trim());
+  $('progressPaste').value = '';
+}));
+
+// Data sent by the bookmarklet arrives in the URL hash.
+if (location.hash.startsWith('#ytprogress=')) {
+  const text = decodeURIComponent(location.hash.slice('#ytprogress='.length));
+  history.replaceState(null, '', location.pathname);
+  $('progressPanel').scrollIntoView();
+  guard('progressMsg', () => importPayload(text));
+}
+
+// ---- 4b. Takeout watch history ----
 
 $('historyFile').addEventListener('change', (e) => guard('historyMsg', async () => {
   const file = e.target.files[0];

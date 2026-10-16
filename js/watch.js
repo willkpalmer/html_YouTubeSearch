@@ -1,6 +1,6 @@
 // Plays a video with the YouTube IFrame player and records how far you got.
 import * as store from './store.js';
-import { formatAge, formatCount, formatDuration, youtubeUrl, isFinished, statusOf } from './common.js';
+import { formatAge, formatCount, formatDuration, youtubeUrl, isFinished, statusOf, positionOf } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const videoId = new URLSearchParams(location.search).get('v');
@@ -15,12 +15,12 @@ function describe() {
   if (status === 'unwatched') return 'Not watched yet';
   if (status === 'finished') return '✓ Finished';
   const dur = rec.duration || video?.duration || 0;
-  return `Watched ${formatDuration(rec.position)}${dur ? ` of ${formatDuration(dur)}` : ''}`;
+  return `Watched ${formatDuration(positionOf(rec, video))}${dur ? ` of ${formatDuration(dur)}` : ''}`;
 }
 
 function refreshUi() {
   $('statusText').textContent = describe();
-  $('ytLink').href = youtubeUrl(videoId, rec?.status === 'started' ? rec.position : 0);
+  $('ytLink').href = youtubeUrl(videoId, rec?.status === 'started' ? positionOf(rec, video) : 0);
 }
 
 async function save(final = false) {
@@ -55,13 +55,14 @@ function onError(e) {
   wrap.append(Object.assign(document.createElement('div'), {
     style: 'display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px',
     innerHTML: blocked
-      ? `This video can't be played here (the uploader disabled embedding, or the page isn't running from a web server).<br><br><a href="${youtubeUrl(videoId, rec?.position)}" target="_blank" rel="noopener">Watch it on YouTube ↗</a>`
+      ? `This video can't be played here (the uploader disabled embedding, or the page isn't running from a web server).<br><br><a href="${youtubeUrl(videoId, positionOf(rec, video))}" target="_blank" rel="noopener">Watch it on YouTube ↗</a>`
       : `The player reported error ${e.data}. <a href="${youtubeUrl(videoId)}" target="_blank" rel="noopener">Watch it on YouTube ↗</a>`,
   }));
 }
 
 function createPlayer() {
-  const resumeAt = rec?.status === 'started' && rec.position > 5 ? Math.floor(rec.position) - 2 : 0;
+  const pos = positionOf(rec, video);
+  const resumeAt = rec?.status === 'started' && pos > 5 ? Math.floor(pos) - 2 : 0;
   player = new YT.Player('player', {
     videoId,
     playerVars: { autoplay: 1, start: resumeAt, rel: 0, playsinline: 1, origin: location.origin },

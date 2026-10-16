@@ -1,6 +1,6 @@
 import * as store from './store.js';
-import { syncAll } from './youtube.js';
-import { el, formatAge, formatCount, formatDuration, youtubeUrl, statusOf, percentOf } from './common.js';
+import { syncAll, syncChannel } from './youtube.js';
+import { el, formatAge, formatCount, formatDuration, youtubeUrl, statusOf, percentOf, positionOf, fold } from './common.js';
 
 const PAGE_SIZE = 60;
 const FILTER_KEY = 'yt-subs-search-filters';
@@ -8,6 +8,8 @@ const DAY = 86400000;
 
 const $ = (id) => document.getElementById(id);
 const statusBoxes = [...document.querySelectorAll('#status input')];
+// index.html?channel=UC... shows a single channel.
+const pageChannelId = new URLSearchParams(location.search).get('channel');
 
 let videos = [];
 let channels = [];
@@ -20,7 +22,7 @@ let shown = 0;
 function readFilters() {
   return {
     q: $('q').value,
-    channel: $('channel').value,
+    channel: pageChannelId || $('channel').value,
     status: statusBoxes.filter((b) => b.checked).map((b) => b.value),
     minLen: $('minLen').value,
     maxLen: $('maxLen').value,
@@ -54,9 +56,11 @@ function loadSavedFilters() {
 
 function applyFilters() {
   const f = readFilters();
-  localStorage.setItem(FILTER_KEY, JSON.stringify(f));
+  // The single-channel view shouldn't change which channel the main Browse page remembers.
+  const saved = pageChannelId ? { ...f, channel: loadSavedFilters().channel ?? '' } : f;
+  localStorage.setItem(FILTER_KEY, JSON.stringify(saved));
   const now = Date.now();
-  const terms = f.q.toLowerCase().split(/\s+/).filter(Boolean);
+  const terms = fold(f.q).split(/\s+/).filter(Boolean);
   const minSec = f.minLen !== '' ? Number(f.minLen) * 60 : null;
   const maxSec = f.maxLen !== '' ? Number(f.maxLen) * 60 : null;
   const newest = f.newerThan ? now - Number(f.newerThan) * DAY : null;
@@ -73,14 +77,14 @@ function applyFilters() {
     if (newest !== null && v.publishedAt < newest) return false;
     if (oldest !== null && v.publishedAt > oldest) return false;
     if (terms.length) {
-      const hay = (v._hay ||= `${v.title}\n${v.channelTitle}\n${v.description}`.toLowerCase());
+      const hay = (v._hay ||= fold(`${v.title}\n${v.channelTitle}\n${v.description}`));
       if (!terms.every((t) => hay.includes(t))) return false;
     }
     return true;
   });
 
   const p = (v) => progress.get(v.id);
-  const remaining = (v) => v.duration - (p(v)?.position || 0);
+  const remaining = (v) => v.duration - positionOf(p(v), v);
   const sorters = {
     newest: (a, b) => b.publishedAt - a.publishedAt,
     oldest: (a, b) => a.publishedAt - b.publishedAt,
@@ -106,7 +110,7 @@ function renderMore() {
   grid.append(...next.map(card));
   shown += next.length;
 
-  const total = videos.length;
+  const total = pageChannelId ? videos.filter((v) => v.channelId === pageChannelId).length : videos.length;
   $('count').textContent = total
     ? `${filtered.length.toLocaleString()} of ${total.toLocaleString()} videos`
     : '';
@@ -114,7 +118,9 @@ function renderMore() {
 
   if (!filtered.length) {
     grid.append(el('div', { class: 'empty', style: 'grid-column: 1 / -1' },
-      total
+      pageChannelId && !videos.some((v) => v.channelId === pageChannelId)
+        ? 'No videos for this channel yet. Click "Sync this channel".'
+        : total
         ? 'No videos match these filters.'
         : channels.length
           ? 'No videos yet. Click "Sync new videos" to download your channels’ uploads.'
@@ -145,7 +151,7 @@ function card(v) {
     el('div', { class: 'body' },
       el('a', { class: 'title', href: watchHref, title: v.title }, v.title),
       el('div', { class: 'meta' },
-        el('a', { href: '#', onclick: (e) => { e.preventDefault(); $('channel').value = v.channelId; applyFilters(); } }, v.channelTitle)),
+        el('a', { href: `index.html?channel=${encodeURIComponent(v.channelId)}` }, v.channelTitle)),
       el('div', { class: 'meta' }, `${formatCount(v.views)} views · ${formatAge(v.publishedAt)}`),
       el('div', { class: 'actions' },
         status !== 'finished'
@@ -154,7 +160,7 @@ function card(v) {
         status !== 'unwatched'
           ? el('button', { class: 'btn small', onclick: () => mark(v, 'unwatched') }, '↺ Mark unwatched')
           : null,
-        el('a', { class: 'btn small', href: youtubeUrl(v.id, status === 'started' ? prog.position : 0), target: '_blank', rel: 'noopener' }, 'Open on YouTube ↗'))));
+        el('a', { class: 'btn small', href: youtubeUrl(v.id, status === 'started' ? positionOf(prog, v) : 0), target: '_blank', rel: 'noopener' }, 'Open on YouTube ↗'))));
   return node;
 }
 
@@ -207,7 +213,49 @@ async function loadData() {
       .sort((a, b) => a.title.localeCompare(b.title))
       .map((c) => el('option', { value: c.id }, `${c.title} (${counts.get(c.id) || 0})`)));
   select.value = channels.some((c) => c.id === current) ? current : '';
+  if (pageChannelId) renderBanner(counts.get(pageChannelId) || 0);
   applyFilters();
+}
+
+// ---- Single-channel view ----
+
+function renderBanner(count) {
+  const c = channels.find((x) => x.id === pageChannelId);
+  const banner = $('channelBanner');
+  banner.hidden = false;
+  if (!c) {
+    banner.replaceChildren(el('div', { class: 'grow' },
+      el('h1', {}, 'Channel not found'),
+      el('div', { class: 'meta' }, 'It isn\u2019t in your subscriptions here. Add it on the Settings page.')),
+    el('a', { class: 'btn', href: 'channels.html' }, '\u2190 All channels'));
+    return;
+  }
+  document.title = `${c.title} \u2013 Subscription Search`;
+  banner.replaceChildren(...[
+    c.thumb ? el('img', { src: c.thumb, alt: '' }) : null,
+    el('div', { class: 'grow' },
+      el('h1', {}, c.title),
+      el('div', { class: 'meta', id: 'channelSyncStatus' },
+        `${count} video${count === 1 ? '' : 's'} \u00b7 ${c.lastSync ? `synced ${formatAge(c.lastSync)}` : 'not synced yet'}`)),
+    el('div', { class: 'actions' },
+      el('button', { class: 'btn primary', id: 'channelSyncBtn', onclick: () => runChannelSync(c) }, 'Sync this channel'),
+      el('a', { class: 'btn', href: `https://www.youtube.com/channel/${c.id}/videos`, target: '_blank', rel: 'noopener', title: 'Open on YouTube, e.g. to grab your progress with the bookmark from Settings' }, 'Channel on YouTube \u2197'),
+      el('a', { class: 'btn', href: 'channels.html' }, '\u2190 All channels')),
+  ].filter(Boolean));
+}
+
+async function runChannelSync(c) {
+  $('channelSyncBtn').disabled = true;
+  $('channelSyncStatus').textContent = 'Syncing\u2026';
+  try {
+    if (!store.getSettings().apiKey) throw new Error('Add your YouTube API key on the Settings page first.');
+    const added = await syncChannel(c);
+    await loadData();
+    $('channelSyncStatus').textContent += ` \u00b7 ${added} new video${added === 1 ? '' : 's'}`;
+  } catch (e) {
+    $('channelSyncStatus').textContent = `Sync failed: ${e.message}`;
+    $('channelSyncBtn').disabled = false;
+  }
 }
 
 let debounce;
@@ -240,4 +288,13 @@ window.addEventListener('focus', async () => {
 
 writeFilters(loadSavedFilters());
 updateSyncStatus();
-loadData();
+if (pageChannelId) {
+  $('channelFilter').hidden = true;
+  $('syncBtn').hidden = true;
+  $('syncStatus').hidden = true;
+}
+loadData().then(() => {
+  // First visit to a channel that has never been synced: fetch its videos straight away.
+  const c = pageChannelId && channels.find((x) => x.id === pageChannelId);
+  if (c && !c.lastSync && store.getSettings().apiKey) runChannelSync(c);
+});

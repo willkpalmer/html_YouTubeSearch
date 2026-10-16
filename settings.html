@@ -11,7 +11,8 @@
     <a class="brand" href="index.html"><span class="logo"></span>Subscription Search</a>
     <nav>
       <a href="index.html">Browse</a>
-      <a href="settings.html" class="active">Settings &amp; channels</a>
+      <a href="channels.html">Channels</a>
+      <a href="settings.html" class="active">Settings</a>
     </nav>
   </header>
 
@@ -45,7 +46,7 @@
       <p>Pick whichever is easiest. You can use more than one; duplicates are ignored.</p>
 
       <h3>Option A – Google Takeout file (no extra setup)</h3>
-      <p>Go to <a href="https://takeout.google.com/" target="_blank" rel="noopener">takeout.google.com</a>, click <strong>Deselect all</strong>, tick <strong>YouTube and YouTube Music</strong>, under “All YouTube data included” choose only <strong>subscriptions</strong> (and <strong>history</strong> if you want step 4). Export, unzip, then choose <code>subscriptions/subscriptions.csv</code>:</p>
+      <p>Go to <a href="https://takeout.google.com/" target="_blank" rel="noopener">takeout.google.com</a>, click <strong>Deselect all</strong>, tick <strong>YouTube and YouTube Music</strong>, under “All YouTube data included” choose only <strong>subscriptions</strong> (and <strong>history</strong> if you want the Takeout option in step 4). Export, unzip, then choose <code>subscriptions/subscriptions.csv</code>:</p>
       <input type="file" id="csvFile" accept=".csv,text/csv">
 
       <h3>Option B – Paste channels</h3>
@@ -90,9 +91,31 @@
       </table>
     </section>
 
-    <section class="panel">
-      <h2>4. Import watch history (optional)</h2>
-      <p>YouTube doesn't let other apps read your watch history or progress, so this app tracks progress when you play videos in its own player. To bring in what you've already watched on YouTube, import <code>history/watch-history.html</code> or <code>.json</code> from Google Takeout. Only videos currently marked unwatched are changed.</p>
+    <section class="panel" id="progressPanel">
+      <h2>4. Import watch progress from YouTube</h2>
+      <p>YouTube's API doesn't share your watch progress, but youtube.com shows it to you as the red bar under each thumbnail. This bookmark reads those bars and brings them into the app, including how far into each video you got.</p>
+
+      <h3>Set up (once)</h3>
+      <p>Show your browser's bookmarks bar (<strong>Ctrl+Shift+B</strong>), then drag this button onto it:</p>
+      <p><a class="btn primary" id="bookmarklet" href="#" title="Drag me to your bookmarks bar">⬇ Grab YouTube progress</a></p>
+
+      <h3>Use it</h3>
+      <ol>
+        <li>Go to <a href="https://www.youtube.com/feed/history" target="_blank" rel="noopener">youtube.com/feed/history</a> while signed in. You can also use a channel's <strong>Videos</strong> tab to pick up older videos from that channel.</li>
+        <li>Click the <strong>Grab YouTube progress</strong> bookmark. It scrolls down the page on its own to load more videos. Click <strong>Stop scrolling</strong> once it's gone back far enough.</li>
+        <li>Click <strong>Send to app</strong>. This page opens and imports the progress.</li>
+      </ol>
+      <p>Progress is only ever moved forward: a video already finished here stays finished. The bookmark only reads the page, and nothing leaves your browser.</p>
+      <details>
+        <summary>If "Send to app" doesn't work</summary>
+        <p>Click <strong>Copy</strong> in the bookmark's box instead, then paste here:</p>
+        <textarea id="progressPaste" rows="3" placeholder='{"v":1,"items":[…]}'></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="progressPasteBtn">Import pasted progress</button></div>
+      </details>
+      <div class="msg" id="progressMsg"></div>
+
+      <h3>Or: Google Takeout watch history</h3>
+      <p>This only says <em>which</em> videos you watched, not how far. Import <code>history/watch-history.html</code> or <code>.json</code> from Google Takeout. Only videos currently marked unwatched are changed.</p>
       <div class="row">
         <label>Mark them as
           <select id="historyStatus">

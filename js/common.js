@@ -47,6 +47,11 @@ export function el(tag, attrs = {}, ...children) {
   return node;
 }
 
+// Lower-case and strip accents, for searching ("Ångström" matches "ang").
+export function fold(text) {
+  return (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 export function youtubeUrl(id, position = 0) {
   return `https://www.youtube.com/watch?v=${id}${position > 5 ? `&t=${Math.floor(position)}s` : ''}`;
 }
@@ -65,9 +70,18 @@ export function isFinished(position, duration) {
     || (duration > MIN_LENGTH_FOR_REMAINING_RULE && duration - position < remaining);
 }
 
+// Seconds watched. Progress imported from YouTube may only have a percentage
+// (ytPercent) until the video's length is known.
+export function positionOf(progress, video) {
+  if (!progress) return 0;
+  if (progress.position > 0) return progress.position;
+  const dur = progress.duration || video?.duration || 0;
+  return progress.ytPercent > 0 && dur ? (progress.ytPercent / 100) * dur : 0;
+}
+
 export function statusOf(progress, video) {
   const status = progress?.status || 'unwatched';
-  if (status === 'started' && isFinished(progress.position, progress.duration || video?.duration)) return 'finished';
+  if (status === 'started' && isFinished(positionOf(progress, video), progress.duration || video?.duration)) return 'finished';
   return status;
 }
 
@@ -75,5 +89,6 @@ export function percentOf(progress, video) {
   if (!progress) return 0;
   if (statusOf(progress, video) === 'finished') return 100;
   const dur = progress.duration || video?.duration || 0;
-  return dur ? Math.min(100, Math.round((progress.position / dur) * 100)) : 0;
+  if (!dur) return Math.round(progress.ytPercent || 0);
+  return Math.min(100, Math.round((positionOf(progress, video) / dur) * 100));
 }

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Channels – Subscription Search</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo"></span>Subscription Search</a>
+    <nav>
+      <a href="index.html">Browse</a>
+      <a href="channels.html" class="active">Channels</a>
+      <a href="settings.html">Settings</a>
+    </nav>
+  </header>
+
+  <main class="page channels-page">
+    <div class="channels-head">
+      <input type="search" id="q" placeholder="Search your subscriptions" autofocus>
+      <span class="count" id="count"></span>
+    </div>
+    <nav class="letters" id="letters" aria-label="Jump to letter"></nav>
+    <div id="list"></div>
+  </main>
+
+  <script type="module" src="js/channels.js"></script>
+</body>
+</html>

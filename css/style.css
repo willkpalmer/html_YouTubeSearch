@@ -27,6 +27,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0;
   background: var(--bg);
@@ -155,3 +156,34 @@ code { background: var(--chip); padding: 1px 5px; border-radius: 4px; }
   .filters { position: static; max-height: none; }
   .topbar { padding: 10px 12px; gap: 10px; flex-wrap: wrap; }
 }
+
+/* Channels page */
+.channels-page { max-width: 760px; gap: 12px; }
+.channels-head { display: flex; gap: 12px; align-items: center; }
+.channels-head input { flex: 1; font-size: 15px; padding: 9px 12px; }
+.channels-head .count { color: var(--muted); white-space: nowrap; }
+.letters {
+  position: sticky; top: 57px; z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 0;
+  background: var(--bg);
+}
+.letters a, .letters span { min-width: 24px; text-align: center; padding: 2px 4px; border-radius: 6px; font-weight: 600; text-decoration: none; }
+.letters a:hover { background: var(--chip); }
+.letters span { color: var(--border); }
+.letter-group h2 { margin: 14px 0 6px; font-size: 14px; color: var(--muted); scroll-margin-top: 110px; }
+.channel-list { list-style: none; margin: 0; padding: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.channel-list li + li { border-top: 1px solid var(--border); }
+.channel-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; text-decoration: none; }
+.channel-row:hover { background: var(--chip); }
+.channel-row img, .channel-row .avatar { width: 40px; height: 40px; border-radius: 50%; flex: none; background: var(--chip); }
+.channel-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.channel-text .meta, .channel-row > .meta { color: var(--muted); font-size: 13px; }
+.chev { color: var(--muted); font-size: 22px; }
+
+/* Single-channel view on the Browse page */
+.channel-banner { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
+.channel-banner img { width: 56px; height: 56px; border-radius: 50%; }
+.channel-banner h1 { margin: 0; font-size: 20px; }
+.channel-banner .meta { color: var(--muted); font-size: 13px; }
+.channel-banner .grow { flex: 1; min-width: 200px; }
+.channel-banner .actions { display: flex; gap: 8px; flex-wrap: wrap; }
