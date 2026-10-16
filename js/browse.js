@@ -147,7 +147,7 @@ function card(v) {
       el('img', { src: v.thumb, alt: '', loading: 'lazy' }),
       statusBadge,
       el('span', { class: 'badge' }, v.kind === 'live' ? `LIVE · ${formatDuration(v.duration)}` : formatDuration(v.duration)),
-      pct > 0 && status !== 'finished' ? el('div', { class: 'bar' }, el('div', { style: `width:${pct}%` })) : null),
+      pct > 0 ? el('div', { class: 'bar', title: `${pct}% watched` }, el('div', { style: `width:${pct}%` })) : null),
     el('div', { class: 'body' },
       el('a', { class: 'title', href: watchHref, title: v.title }, v.title),
       el('div', { class: 'meta' },
