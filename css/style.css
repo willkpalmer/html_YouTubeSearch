@@ -61,6 +61,7 @@ button, input, select {
 .topbar nav a.active, .topbar nav a:hover { background: var(--chip); color: var(--text); }
 .topbar .spacer { flex: 1; }
 .sync-status { color: var(--muted); font-size: 13px; }
+.app-version { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 /* Buttons & inputs */
 .btn {

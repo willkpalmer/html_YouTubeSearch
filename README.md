@@ -80,3 +80,12 @@ Shorts are excluded by reading each channel's long-form-only uploads playlist (`
 the full uploads playlist (`UU…`). If a channel doesn't have one, the app falls back to all uploads and treats
 anything 3 minutes or shorter as a Short. A sync costs roughly 2–3 API quota units per channel, and the
 free daily quota is 10,000.
+
+## Version number
+
+The top bar shows the running version at the far right, e.g. `v9 · 16 Oct 2026, 23:30` (in your local
+time). If it doesn't match the latest commit, your browser is showing a cached copy: press
+**Ctrl+Shift+R** to reload. GitHub Pages can take a few minutes to publish a new commit.
+
+`js/version.js` is written by a git pre-commit hook. If you commit from your own clone, enable the hook
+once with `git config core.hooksPath .githooks`.

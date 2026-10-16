@@ -1,7 +1,20 @@
 // Shared formatting helpers.
 import { getSettings } from './store.js';
+import { VERSION, BUILT } from './version.js';
 
 const settings = getSettings();
+
+// Version stamp at the far right of the top bar, e.g. "v8 · 16 Oct 2026, 23:17".
+const topbar = document.querySelector('.topbar');
+if (topbar) {
+  const built = new Date(BUILT);
+  const when = built.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  const tag = document.createElement('span');
+  tag.className = 'app-version';
+  tag.textContent = `v${VERSION} \u00b7 ${when}`;
+  tag.title = `Version ${VERSION}, published ${built.toUTCString()}`;
+  topbar.append(tag);
+}
 
 export function formatDuration(sec) {
   sec = Math.max(0, Math.round(sec || 0));

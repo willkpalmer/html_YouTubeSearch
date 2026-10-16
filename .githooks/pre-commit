@@ -1,0 +1,8 @@
+#!/bin/sh
+# Stamps js/version.js with the next version number (commit count) and the
+# current time, so the app can show which version is running.
+# Enable once per clone with:  git config core.hooksPath .githooks
+n=$(( $(git rev-list --count HEAD 2>/dev/null || echo 0) + 1 ))
+t=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+printf "// Written by .githooks/pre-commit on every commit; don't edit by hand.\nexport const VERSION = %s;\nexport const BUILT = '%s';\n" "$n" "$t" > js/version.js
+git add js/version.js

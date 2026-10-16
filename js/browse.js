@@ -110,9 +110,18 @@ function renderMore() {
   grid.append(...next.map(card));
   shown += next.length;
 
-  const total = pageChannelId ? videos.filter((v) => v.channelId === pageChannelId).length : videos.length;
+  const scope = pageChannelId ? videos.filter((v) => v.channelId === pageChannelId) : videos;
+  const total = scope.length;
+  let started = 0;
+  let finished = 0;
+  for (const v of scope) {
+    const s = statusOf(progress.get(v.id), v);
+    if (s === 'started') started++;
+    else if (s === 'finished') finished++;
+  }
   $('count').textContent = total
-    ? `${filtered.length.toLocaleString()} of ${total.toLocaleString()} videos`
+    ? `${filtered.length.toLocaleString()} of ${total.toLocaleString()} videos \u00b7 `
+      + `${started.toLocaleString()} in progress \u00b7 ${finished.toLocaleString()} finished`
     : '';
   $('more').hidden = shown >= filtered.length;
 
